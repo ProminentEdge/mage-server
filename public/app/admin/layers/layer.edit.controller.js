@@ -136,18 +136,29 @@ function parseSensors(root, collection) {
         } else if(sensorXMLNode.children[k].nodeName === 'sos:phenomenonTime') {
           sensor.timePiece = '&temporalFilter=phenomenonTime,'; //sensorXMLNode.children[k].children[0].children[0].innerHTML
           //get actual start and end time for the data
-          sensor.timePiece += sensorXMLNode.children[k].children[0].children[0].innerHTML + '/';
 
-          if(sensorXMLNode.children[k].children[0].children[1].innerHTML === "") {
-            var toks = sensorXMLNode.children[k].children[0].children[0].innerHTML.split(':');
-            var startMinute = Number(toks[1]);
-            startMinute += 5;
-            toks[1] = startMinute.toString();
-            sensor.timePiece += toks[0]+ ":" +toks[1]+ ":" +toks[2]+'&replaySpeed=2';
-
+          //no start time mentioned so just use 'now'
+          if(sensorXMLNode.children[k].children[0].children[0].innerHTML === "") {
+             sensor.timePiece += 'now';
           }
           else {
-             sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML + '&replaySpeed=2';
+            //otherwise get the start time
+            sensor.timePiece += sensorXMLNode.children[k].children[0].children[0].innerHTML + '/';
+
+            //if no ending time is specified then just choose to make the duration five minutes from the start
+            if (sensorXMLNode.children[k].children[0].children.length < 2 || sensorXMLNode.children[k].children[0].children[1].innerHTML === "") {
+              var toks = sensorXMLNode.children[k].children[0].children[0].innerHTML.split(':');
+              var startMinute = Number(toks[1]);
+              startMinute += 5;
+              toks[1] = startMinute.toString();
+              sensor.timePiece += toks[0] + ":" + toks[1] + ":" + toks[2] + '&replaySpeed=2';
+
+            }
+            else {
+
+              sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML + '&replaySpeed=2';
+
+            }
           }
         }
       }

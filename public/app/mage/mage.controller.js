@@ -302,10 +302,16 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
             },
           };
 
+          var myIcon = L.AwesomeMarkers.newDivIcon({
+            icon: 'plus',
+            color: 'cadetblue'
+          })
+
           MapService.createMarker(newMarker, {
             layerId: layer.name,
             selected: true,
             clickable: true,
+            icon:myIcon,
             popup: '<div style = \"min-width:128px;\"><strong><u>' + layer.name + '</u></strong></div> <br> ' + contentHTML
           });
 
