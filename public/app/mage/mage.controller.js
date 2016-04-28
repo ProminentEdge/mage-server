@@ -261,9 +261,13 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
               var reader = new FileReader();
               reader.prop = observedProperty;
               reader.contentID = contentID;
+              reader.feature = featureCollection.features[0];
+              reader.layer = layer;
 
               reader.onload = function () {
                 var rec = this.result;
+                if(rec === "")
+                  return;
                 if(this.prop.indexOf('Location') != -1) {
                   var data = rec.trim().split(",");
                   var lat = parseFloat(data[1]);
@@ -275,10 +279,10 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                   if (contentTag != null)
                     contentTag.innerHTML = 'lon: ' + lon.toFixed(10) + '<br>lat: ' + lat.toFixed(10) + '<br>alt: ' + alt.toFixed(1);
 
-                  featureCollection.features[0].id = layer.name;
-                  featureCollection.features[0].type = 'Sensor';
-                  featureCollection.features[0].geometry.coordinates = [lon, lat];
-                  MapService.updateMarker(featureCollection.features[0], layer.name);
+                  this.feature.id = this.layer.name;
+                  this.feature.type = 'Sensor';
+                  this.feature.geometry.coordinates = [lon, lat];
+                  MapService.updateMarker( this.feature, this.layer.name);
                 }
                 else if(this.prop.indexOf('Quaternion') != -1) {
                   var data = rec.trim().split(",");
@@ -287,6 +291,10 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                   var contentTag = document.getElementById(this.contentID);
                   if (contentTag != null)
                     contentTag.innerHTML = 'ang: ' + ang.toFixed(2);
+
+                  this.feature.angle = ang;
+                  MapService.updateMarker( this.feature, this.layer.name);
+
                 }
                 else {
                    var contentTag = document.getElementById(this.contentID);
@@ -301,7 +309,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                 this.reader.readAsText(event.data);
               }
               ws.onerror = function (event) {
-                ws.close();
+                this.close();
               }
             }
           }

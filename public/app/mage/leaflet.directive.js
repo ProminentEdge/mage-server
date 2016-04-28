@@ -196,6 +196,9 @@ function LeafletController($rootScope, $scope, $interval, $timeout, MapService, 
 
     if (marker.geometry && marker.geometry.type === 'Point') {
       layer.layer.setLatLng([marker.geometry.coordinates[1], marker.geometry.coordinates[0]]);
+      if(marker.angle) {
+        layer.layer.setAngle(marker.angle);
+      }
     }
   }
 
