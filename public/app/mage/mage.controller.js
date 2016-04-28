@@ -230,6 +230,8 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
           if(tokens[tokens.length-1].indexOf('replaySpeed') != -1) {
             timeToken = '&'+tokens.pop(); //replay speed
             timeToken = '&'+tokens.pop()+timeToken; //time duration
+          } else  if(tokens[tokens.length-1].indexOf('now') != -1) {
+             timeToken = '&'+tokens.pop();
           }
           //chop off http:// and ending '/' since we will be using websocket
           var baseURL = tokens[0].substring(0, tokens[0].length - 1);

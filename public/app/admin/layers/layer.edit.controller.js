@@ -139,7 +139,7 @@ function parseSensors(root, collection) {
 
           //no start time mentioned so just use 'now'
           if(sensorXMLNode.children[k].children[0].children[0].innerHTML === "") {
-             sensor.timePiece += 'now';
+             sensor.timePiece += 'now/2020-08-29T16:17:29.783Z';
           }
           else {
             //otherwise get the start time
