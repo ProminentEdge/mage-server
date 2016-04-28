@@ -137,8 +137,8 @@ function parseSensors(root, collection) {
           sensor.timePiece = '&temporalFilter=phenomenonTime,'; //sensorXMLNode.children[k].children[0].children[0].innerHTML
           //get actual start and end time for the data
 
-          //no start time mentioned so just use 'now'
-          if(sensorXMLNode.children[k].children[0].children[0].innerHTML === "") {
+          // if "now" is anywhere in the time rage, then assume it is a live query from now to future
+          if($(sensorXMLNode.children[k].children[0]).find('[indeterminatePosition="now"]')) {
              sensor.timePiece += 'now/2020-08-29T16:17:29.783Z';
           }
           else {
