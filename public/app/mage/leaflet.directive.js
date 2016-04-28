@@ -128,10 +128,20 @@ function LeafletController($rootScope, $scope, $interval, $timeout, MapService, 
         latlng = map.getCenter();
       }
 
-      var layer = L.marker(latlng, {
-        draggable: options.draggable,
+      var layer;
+      if (options.icon) {
+        layer = L.rotatedMarker(latlng, {
+          draggable: options.draggable,
+          icon: options.icon,
+          angle:90
+        });
+      }
+      else {
+        layer = L.marker(latlng, {
+          draggable: options.draggable,
+        });
+      }
 
-      });
       layer.bindPopup(options.popup).openPopup();
 
       /*if (_.isFunction(options.onDragEnd)) {
@@ -162,24 +172,13 @@ function LeafletController($rootScope, $scope, $interval, $timeout, MapService, 
         latlng = map.getCenter();
       }
 
-      var layer;
-      if (options.icon) {
-        layer = L.rotatedMarker(latlng, {
-          draggable: options.draggable,
-          icon: options.icon,
-          angle:90
-        });
-      }
-      else {
-        layer = L.marker(latlng, {
-          draggable: options.draggable,
-          icon: L.AwesomeMarkers.newDivIcon({
-            icon: 'plus',
-            color: 'cadetblue'
-          })
-        });
-      }
-
+      var layer = L.marker(latlng, {
+        draggable: options.draggable,
+        icon: L.AwesomeMarkers.newDivIcon({
+          icon: 'plus',
+          color: 'cadetblue'
+        })
+      });
 
       if (_.isFunction(options.onDragEnd)) {
         layer.on('dragend', function() {
@@ -488,6 +487,7 @@ function LeafletController($rootScope, $scope, $interval, $timeout, MapService, 
     map.invalidateSize({pan: false});
   }
 }
+
 L.RotatedMarker = L.Marker.extend({
     options: {
         angle: 0
@@ -538,4 +538,3 @@ L.RotatedMarker = L.Marker.extend({
 L.rotatedMarker = function (pos, options) {
     return new L.RotatedMarker(pos, options);
 };
-

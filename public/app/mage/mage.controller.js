@@ -257,17 +257,19 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
               contentHTML += '<div style = \"max-width:128; word-wrap:break-word;\" id = \"'+contentID+'\"></div>';
 
               var reader = new FileReader();
+              reader.prop = observedProperty;
+              reader.contentID = contentID;
 
               reader.onload = function () {
-                var rec = reader.result;
-                if(observedProperty.indexOf('Location') != -1) {
+                var rec = this.result;
+                if(this.prop.indexOf('Location') != -1) {
                   var data = rec.trim().split(",");
                   var lat = parseFloat(data[1]);
                   var lon = parseFloat(data[2]);
                   var alt = parseFloat(data[3]);
                   var ltlg = {'lat': lat, 'lng': lon};
 
-                  var contentTag = document.getElementById(contentID);
+                  var contentTag = document.getElementById(this.contentID);
                   if (contentTag != null)
                     contentTag.innerHTML = 'lon: ' + lon.toFixed(10) + '<br>lat: ' + lat.toFixed(10) + '<br>alt: ' + alt.toFixed(1);
 
@@ -276,16 +278,25 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                   featureCollection.features[0].geometry.coordinates = [lon, lat];
                   MapService.updateMarker(featureCollection.features[0], layer.name);
                 }
+                else if(this.prop.indexOf('Quaternion') != -1) {
+                  var data = rec.trim().split(",");
+                  var ang = parseFloat(data[4]);
+                  ang = 2*Math.acos(ang) * (180/Math.PI);
+                  var contentTag = document.getElementById(this.contentID);
+                  if (contentTag != null)
+                    contentTag.innerHTML = 'ang: ' + ang.toFixed(2);
+                }
                 else {
-                   var contentTag = document.getElementById(contentID);
+                   var contentTag = document.getElementById(this.contentID);
                    if (contentTag != null)
                     contentTag.textContent = 'Data: ' + rec;
                 }
               }
 
               var ws = new WebSocket("ws://" + streamURL);
+              ws.reader = reader;
               ws.onmessage = function (event) {
-                reader.readAsText(event.data);
+                this.reader.readAsText(event.data);
               }
               ws.onerror = function (event) {
                 ws.close();
@@ -302,10 +313,21 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
             },
           };
 
-          var myIcon = L.AwesomeMarkers.newDivIcon({
+          /*var myIcon = L.AwesomeMarkers.newDivIcon({
             icon: 'plus',
             color: 'cadetblue'
-          })
+          });*/
+
+          var myIcon = L.icon({
+              iconUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
+              iconRetinaUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
+              iconSize: [32, 32],
+              popupAnchor: [0, -18],
+              //shadowUrl: 'my-icon-shadow.png',
+              //shadowRetinaUrl: 'my-icon-shadow@2x.png',
+              //shadowSize: [68, 95],
+              //shadowAnchor: [22, 94]
+          });
 
           MapService.createMarker(newMarker, {
             layerId: layer.name,
