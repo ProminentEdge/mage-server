@@ -148,7 +148,7 @@ function parseSensors(root, collection) {
             //archived or mixed case
             //either way get start and end times
             sensor.timePiece += sensorXMLNode.children[k].children[0].children[0].innerHTML + '/';
-            if(sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML === "") {
+            if(sensorXMLNode.children[k].children[0].children[1].innerHTML === "") {
               sensor.timePiece += 'now&replaySpeed=2';
             } else {
               sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML + '&replaySpeed=2';
