@@ -137,7 +137,28 @@ function parseSensors(root, collection) {
           sensor.timePiece = '&temporalFilter=phenomenonTime,'; //sensorXMLNode.children[k].children[0].children[0].innerHTML
           //get actual start and end time for the data
 
-          // if "now" is anywhere in the time rage, then assume it is a live query from now to future
+          //3 cases
+          //immediate - (just now)
+          //archived - time in past, time in past + duration
+          //mixed - time in past, now
+
+          //check number of entries in time phenom's child
+          if(sensorXMLNode.children[k].children[0].children.length > 1 &&
+            (sensorXMLNode.children[k].children[0].children[0].innerHTML != "now")) {
+            //archived or mixed case
+            //either way get start and end times
+            sensor.timePiece += sensorXMLNode.children[k].children[0].children[0].innerHTML + '/';
+            if(sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML === "") {
+              sensor.timePiece += 'now&replaySpeed=2';
+            } else {
+              sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML + '&replaySpeed=2';
+            }
+          } else {
+            //immediate case
+            sensor.timePiece += 'now/2099-08-29T16:17:29.783Z';
+          }
+
+          /*// if "now" is anywhere in the time rage, then assume it is a live query from now to future
           if($(sensorXMLNode.children[k].children[0]).find('[indeterminatePosition="now"]')) {
              sensor.timePiece += 'now/2020-08-29T16:17:29.783Z';
           }
@@ -159,7 +180,7 @@ function parseSensors(root, collection) {
               sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML + '&replaySpeed=2';
 
             }
-          }
+          }*/
         }
       }
       collection.push(sensor);

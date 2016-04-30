@@ -285,14 +285,36 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                   MapService.updateMarker( this.feature, this.layer.name);
                 }
                 else if(this.prop.indexOf('Quaternion') != -1) {
-                  var data = rec.trim().split(",");
-                  var ang = parseFloat(data[4]);
-                  ang = 2*Math.acos(ang) * (180/Math.PI);
-                  var contentTag = document.getElementById(this.contentID);
-                  if (contentTag != null)
-                    contentTag.innerHTML = 'ang: ' + ang.toFixed(2);
 
-                  this.feature.angle = ang;
+
+
+                  var data = rec.trim().split(",");
+                  var qx = parseFloat(data[1]);
+                  var qy = parseFloat(data[2]);
+                  var qz = parseFloat(data[3]);
+                  var qw = parseFloat(data[4]);
+
+
+                  var q = new THREE.Quaternion(qx, qy, qz, qw);
+                  var look = new THREE.Vector3( 0, 0, 1 );
+                  look.applyQuaternion(q);
+                  look.y *= -1;
+                  var dot = look.dot(new THREE.Vector3(0,1,0));
+
+                  if(look.x > 0)
+                    yaw = Math.acos(dot)*(180/Math.PI);
+                  else
+                    yaw = -Math.acos(dot)*(180/Math.PI);
+                  //var yaw = 90 - (180/Math.PI*Math.atan2(-look.y, -look.x))+90;
+
+
+
+                  var contentTag = document.getElementById(this.contentID);
+                  if (contentTag != null) {
+                    contentTag.innerHTML = 'x: ' + look.x.toFixed(10) + '<br>y: ' + look.y.toFixed(10) + '<br>z: ' + look.z.toFixed(10);
+                    contentTag.innerHTML += '<br>ang: ' + yaw.toFixed(2);
+                  }
+                  this.feature.angle = yaw;
                   MapService.updateMarker( this.feature, this.layer.name);
 
                 }
@@ -599,4 +621,22 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
     $scope.$apply();
   });
 
+}
+
+function QuatMult(q1,q2) {
+  var ret = [
+  q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3],
+  q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2],
+  q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1],
+  q1[0]*q2[3]
+  + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0] ];
+  return ret;
+}
+
+function QuatTransform(q1, v1){
+	var ret = [
+	q1[3]*q1[3]*v1[0] + 2*q1[1]*q1[3]*v1[2] - 2*q1[2]*q1[3]*v1[1] + q1[0]*q1[0]*v1[0] + 2*q1[1]*q1[0]*v1[1] + 2*q1[2]*q1[0]*v1[2] - q1[2]*q1[2]*v1[0] - q1[1]*q1[1]*v1[0],
+	2*q1[0]*q1[1]*v1[0] + q1[1]*q1[1]*v1[1] + 2*q1[2]*q1[1]*v1[2] + 2*q1[3]*q1[2]*v1[0] - q1[2]*q1[2]*v1[1] + q1[3]*q1[3]*v1[1] - 2*q1[0]*q1[3]*v1[2] - q1[0]*q1[0]*v1[1],
+	2*q1[0]*q1[2]*v1[0] + 2*q1[1]*q1[2]*v1[1] + q1[2]*q1[2]*v1[2] - 2*q1[3]*q1[1]*v1[0] - q1[1]*q1[1]*v1[2] + 2*q1[3]*q1[0]*v1[1] - q1[0]*q1[0]*v1[2] + q1[3]*q1[3]*v1[2]];
+	return ret;
 }
