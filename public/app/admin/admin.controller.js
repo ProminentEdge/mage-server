@@ -2,9 +2,9 @@ angular
   .module('mage')
   .controller('AdminController', AdminController);
 
-AdminController.$inject = ['$scope', '$routeParams', '$location', '$filter', 'UserService', 'DeviceService', 'LoginService', 'Team', 'Event', 'Layer'];
+AdminController.$inject = ['$scope', '$routeParams', '$location', '$filter', 'UserService', 'DeviceService', 'LoginService', 'Team', 'Event', 'Layer', 'SensorServer'];
 
-function AdminController($scope, $routeParams, $location, $filter, UserService, DeviceService, LoginService, Team, Event, Layer) {
+function AdminController($scope, $routeParams, $location, $filter, UserService, DeviceService, LoginService, Team, Event, Layer, SensorServer) {
   $scope.currentAdminPanel = $routeParams.adminPanel || "";
 
   var filter = {};
@@ -53,6 +53,10 @@ function AdminController($scope, $routeParams, $location, $filter, UserService, 
 
   Layer.count(function (data) {
     $scope.layerCount = data.count;
+  });
+
+  SensorServer.count(function (data) {
+    $scope.sensorServerCount = data.count;
   });
 
   LoginService.query({limit: $scope.loginResultsLimit}).success(function(loginPage) {
@@ -105,6 +109,10 @@ function AdminController($scope, $routeParams, $location, $filter, UserService, 
 
   $scope.newEvent = function() {
     $location.path('/admin/events/new');
+  };
+
+  $scope.newSensorServer = function() {
+    $location.path('/admin/sensorservers/new');
   };
 
   $scope.newDevice = function() {

@@ -10,6 +10,7 @@ module.exports = function(app, security) {
     , Role = require('../models/role')
     , Device = require('../models/device')
     , Layer = require('../models/layer')
+    , SensorServer = require('../models/sensorserver')
     , Icon = require('../models/icon')
     , Setting = require('../models/setting');
 
@@ -128,6 +129,20 @@ module.exports = function(app, security) {
       next();
     });
   });
+
+  // Grab the layer for any endpoint that uses layerId
+  app.param('sensorserverId', function(req, res, next, sensorserverId) {
+    SensorServer.getById(sensorserverId, function(server) {
+      if (!server) {
+        return res.status(404).send("Layer not found: ");
+      }
+
+      req.sensorserver = server;
+      next();
+    });
+  });
+
+
 
   // Grab the feature for any endpoint that uses observationId
   app.param('observationId', function(req, res, next, observationId) {

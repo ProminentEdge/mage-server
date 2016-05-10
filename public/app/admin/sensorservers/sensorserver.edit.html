@@ -1,0 +1,82 @@
+<div class="admin-nav-gap">
+  <div class="container-fluid">
+    <ol class="breadcrumb" ng-if="sensorserver.id">
+      <li><a href="#/admin"><i class="fa fa-dashboard admin-dashboard"></i>Dashboard</a></li>
+      <li><a href="#/admin/sensorservers">Sensor Servers</a></li>
+      <li><a ng-href="#/admin/sensorservers/{{sensorserver.id}}">{{sensorserver.name}}</a></li>
+      <li class="active">Edit</li>
+    </ol>
+    <ol class="breadcrumb" ng-if="!sensorserver.id">
+      <li><a href="#/admin"><i class="fa fa-dashboard admin-dashboard"></i>Dashboard</a></li>
+      <li><a href="#/admin/sensorservers">Sensor Servers</a></li>
+      <li class="active">New</li>
+    </ol>
+  </div>
+</div>
+
+<div class="content-flex">
+
+  <div class="content-inner">
+
+    <div class="container bottom-gap-l">
+
+      <div class="row">
+        <div class="col-md-12">
+          <h2 ng-if="sensorserver.id">Edit Sensor Server: {{sensorserver.name}}</h2>
+          <h2 ng-if="!sensorserver.id">New Sensor Server</h2>
+        </div>
+      </div>
+      <hr>
+
+      <div class="row">
+        <div class="col-md-6" ng-show="sensorserver">
+
+          <form ng-submit="saveSensorServer()" class="form">
+
+            <div class="form-group">
+              <label class="control-label">Sensor server name</label>
+              <input class="form-control" type="text" placeholder="i.e. HurricaneSandy" ng-model="sensorserver.name"/>
+            </div>
+            <div class="form-group">
+              <label class="control-label">Sensor server url</label>
+              <input class="form-control" type="text" placeholder="http://sensiasoft.net:8181" ng-model="sensorserver.url"/>
+            </div>
+            <div class="form-group" >
+              <span class="pull-right">
+                <a class="btn btn-default" ng-class="{'disabled': saving}" ng-click="getSensorProperties()">View properties</a>
+              </span>
+            </div>
+            <div class="form-group" >
+              <div ng-show = "sensors.length > 0">
+                <label class="control-label">Sensors</label>
+                <div ng-repeat="x in sensors">
+                  <input type = "radio" name = "selected-sensor" value = {{x.name}} ng-model = "selectedSensor.name" ng-change = "selectedSensorChanged()"/>
+
+                  <b>ID:</b> {{ x.name }} <br>
+                  <b>Description:</b> {{ x.description }} <br>
+                  <b>Time period: </b> <input type = "text" ng-model = "x.startTime"/> <input type = "text" ng-model = "x.endTime"/> <br>
+                  <div ng-show = "x.name === selectedSensor.name && x.properties.length > 0"><b>Properties: </b></div>
+                  <div ng-show = "x.name === selectedSensor.name" ng-repeat="prop in x.properties">
+                    <input type = "checkbox" ng-model = "prop.enabled" ng-true-value = "true" ng-false-value = "false" />
+                     {{ prop.name }}
+                     <br>
+                  </div>
+                  <hr>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="control-label">Description</label>
+              <textarea class="form-control" type="text" placeholder="Brief description of the server." ng-model="sensorserver.description"/>
+            </div>
+            <span class="pull-right">
+              <a class="btn btn-default" ng-class="{'disabled': saving}" ng-click="cancel()">Cancel</a>
+              <a class="btn btn-success" ng-class="{'disabled': saving}" ng-click="saveSensorServer(sensorserver)"><i class="fa fa-check"></i> Save</a>
+            </span>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

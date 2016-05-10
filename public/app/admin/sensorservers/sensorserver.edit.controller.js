@@ -1,42 +1,41 @@
 angular
   .module('mage')
-  .controller('AdminLayerEditController', AdminLayerEditController);
+  .controller('AdminSensorServerEditController', AdminSensorServerEditController);
 
-AdminLayerEditController.$inject = ['$scope', '$http', '$location', '$routeParams', 'LocalStorageService', 'Layer'];
+AdminSensorServerEditController.$inject = ['$scope', '$http', '$location', '$routeParams', 'LocalStorageService', 'SensorServer'];
 
-function AdminLayerEditController($scope, $http, $location, $routeParams, LocalStorageService, Layer) {
+function AdminSensorServerEditController($scope, $http, $location, $routeParams, LocalStorageService, SensorServer) {
   $scope.wmsFormats = ['image/jpeg', 'image/png'];
   $scope.wmsVersions = ['1.1.1', '1.3.0'];
   $scope.uploads = [{}];
   $scope.sensors = [];
   $scope.selectedSensor = {name:"default", options:[] };
 
-  if ($routeParams.layerId) {
-    Layer.get({id: $routeParams.layerId}, function(layer) {
-      $scope.layer = layer;
-       if( $scope.layer.url) {
-
+  if ($routeParams.sensorServerId) {
+    SensorServer.get({id: $routeParams.sensorServerId}, function(server) {
+      $scope.sensorserver = server;
+       if( $scope.sensorserver.url) {
         //the layer.url property holds onto the url as well as the sensor offer and parameters
         //everything is separated by & when the data is saved out. We cannot use the url as it is
         //and need to parse out the sensor and observable properties ourselves
-        var strs = $scope.layer.url.split('&');
+        var strs = $scope.sensorserver.url.split('&');
 
         //extract the base url for the server e.g. http://sensiasoft.net:8181
-         if(strs[0][strs[0].length - 1] === '/')
-           $scope.layer.url = strs[0].substring(0, strs[0].length - 1);
-         else
-           $scope.layer.url = strs[0].substring(0, strs[0].length);
+        if(strs[0][strs[0].length - 1] === '/')
+          $scope.sensorserver.url = strs[0].substring(0, strs[0].length - 1);
+        else
+          $scope.sensorserver.url = strs[0].substring(0, strs[0].length);
 
         //get capabilities from the server and update UI items
-        $http.get($scope.layer.url+'/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities', {
+        $http.get($scope.sensorserver.url+'/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities', {
             headers: {"Content-Type": "application/json"},
             ignoreAuthModule: true,
             withCredentials: false
-          }).success(function(response) {
+          }).then(function(response) {
 
           //parse the xml string
-          var xmlDoc = $.parseXML( response );
-          jsonixParseSensors(response);
+          var xmlDoc = $.parseXML( response.data );
+          //jsonixParseSensors(response);
           parseSensors(xmlDoc, $scope.sensors);
           $scope.sensors.forEach(function (sensor) {
             if(strs[1] && strs[1].indexOf(sensor.name) != -1) {
@@ -52,48 +51,50 @@ function AdminLayerEditController($scope, $http, $location, $routeParams, LocalS
               }
             }
           });
-        });
+        }, function(err) { alert('url is invalid or server is down'); });
       }
     });
   } else {
-    $scope.layer = new Layer();
+    $scope.sensorserver = new Layer();
   }
 
-  $scope.saveLayer = function (layer) {
-    if(layer.type == 'Sensor') {
+  $scope.saveSensorServer = function (sensorserver) {
+    if(sensorserver.type == 'Sensor') {
        for(var i = 0; i < $scope.sensors.length; i++) {
         if($scope.sensors[i].name === $scope.selectedSensor.name) {
-          layer.url = layer.url + "/&offering="+$scope.selectedSensor.name;
+          sensorserver.url = sensorserver.url + "/&offering="+$scope.selectedSensor.name;
           for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
             if($scope.sensors[i].properties[p].enabled) {
-              layer.url = layer.url + "&observedProperty="+$scope.sensors[i].properties[p].name;
+              sensorserver.url = sensorserver.url + "&observedProperty="+$scope.sensors[i].properties[p].name;
             }
           }
-          layer.url = layer.url + $scope.sensors[i].timePiece;
+          sensorserver.url = sensorserver.url + $scope.sensors[i].timePiece;
           break;
         }
       }
     }
 
-    layer.$save({}, function() {
-      $location.path('/admin/layers/' + layer.id);
+    sensorserver.$save({}, function() {
+      $location.path('/admin/sensorservers/' + sensorserver.id);
     });
   };
 
   $scope.cancel = function() {
-    $location.path('/admin/layers/' + $scope.layer.id);
+    $location.path('/admin/layers/' + $scope.sensorserver.id);
   };
 
   $scope.getSensorProperties = function() {
-    $http.get($scope.layer.url+'/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities', {
+    $http.get($scope.sensorserver.url+'/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities', {
         headers: {"Content-Type": "application/json"},
         ignoreAuthModule: true,
         withCredentials: false
-      }).success(function(response) {
+      }).then(function(response) {
 
       //parse the xml string
       var xmlDoc = $.parseXML( response );
       parseSensors(xmlDoc, $scope.sensors);
+    }, function(err) {
+      alert("url is invalid or server is down");
     });
   };
 

@@ -35,6 +35,14 @@ var layerPermissions = [
   'DELETE_LAYER'
 ];
 
+var sensorServerPermissions = [
+  'READ_SENSORSERVER_ALL',
+  'READ_SENSORSERVER_EVENT',
+  'UPDATE_SENSORSERVER',
+  'CREATE_SENSORSERVER',
+  'DELETE_SENSORSERVER'
+];
+
 var observationPermissions = [
   'READ_OBSERVATION_ALL',
   'READ_OBSERVATION_EVENT',
@@ -79,6 +87,7 @@ var allPermissions = []
   .concat(rolePermissions)
   .concat(eventPermissions)
   .concat(layerPermissions)
+  .concat(sensorServerPermissions)
   .concat(observationPermissions)
   .concat(locationPermissions)
   .concat(teamPermissions)

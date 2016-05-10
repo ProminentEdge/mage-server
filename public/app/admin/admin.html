@@ -102,6 +102,21 @@
               </div>
             </div>
 
+            <div class="col-md-2">
+              <div class="card">
+                <div class="card-content admin-card">
+                  <h4 ng-if="eventCount == null">Sensor Servers <i class="fa fa-spinner fa-spin"></i></h4>
+                  <h4 ng-if="eventCount != null">Sensor Servers ({{sensorServerCount}})</h4>
+
+                  <a ng-href="#/admin/sensorservers">
+                    <div class="admin-dashboard-item"><i class="fa fa-map"></i></div>
+                  </a>
+
+                  <hr>
+                  <button class="btn btn-primary" ng-click="newSensorServer()">New Sensor Server</button>
+                </div>
+              </div>
+            </div>
 
             <div class="col-md-2">
               <div class="card">

@@ -64,7 +64,7 @@
 
                   <b>ID:</b> {{ x.name }} <br>
                   <b>Description:</b> {{ x.description }} <br>
-                  <b>Duration: </b> {{x.timePiece}} <br>
+                  <b>Time period: </b> <input type = "text" ng-model = "x.startTime"/> <input type = "text" ng-model = "x.endTime"/> <br>
                   <div ng-show = "x.name === selectedSensor.name && x.properties.length > 0"><b>Properties: </b></div>
                   <div ng-show = "x.name === selectedSensor.name" ng-repeat="prop in x.properties">
                     <input type = "checkbox" ng-model = "prop.enabled" ng-true-value = "true" ng-false-value = "false" />

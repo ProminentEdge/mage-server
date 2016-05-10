@@ -1902,6 +1902,138 @@
                 }
             }
         },
+        "/api/sensorservers": {
+            "get": {
+                "description": "get all sensor servers",
+                "operationId": "getSensorServers",
+                "tags": [
+                    "SensorServer"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "type": "string",
+                        "description": "layer type filter, i.e. Imagery or Feature",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "sensor server response",
+                        "schema": {
+                            "$ref": "#/definitions/SensorServer"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "add new sensor server",
+                "operationId": "addSensorServer",
+                "tags": [
+                    "SensorServer"
+                ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "new sensor server body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SensorServerCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "new sensor server response",
+                        "schema": {
+                            "$ref": "#/definitions/SensorServer"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sensorservers/{id}": {
+            "get": {
+                "description": "Returns a single sensor server based on id",
+                "operationId": "getSensorServerById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of sensor server to fetch",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "SensorServer"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "sensor server response",
+                        "schema": {
+                            "$ref": "#/definitions/SensorServer"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update a single sensor server based on id",
+                "operationId": "updateSensorServerByName",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of sensor server to update",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "sensor server update body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SensorServerCreate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "SensorServer"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "sensor server update response",
+                        "schema": {
+                            "$ref": "#/definitions/SensorServer"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "deletes a single sensor server based on id",
+                "operationId": "deleteSensorServer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "id of sensor server to delete",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "SensorServer"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "sensor server deleted"
+                    }
+                }
+            }
+        },
         "/api/events/{eventId}/layers/{layerId}/features": {
             "get": {
                 "description": "get features for specified layer in event",
@@ -2548,6 +2680,44 @@
                     "type": "boolean"
                 },
                 "format": {
+                    "type": "string"
+                }
+            }
+        },
+        "SensorServerCreate": {
+            "required": [
+                "name",
+                "url"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "SensorServer": {
+            "required": [
+                "id",
+                "name",
+                "url"
+            ],
+            "properties": {
+                "id": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "description": {
                     "type": "string"
                 }
             }

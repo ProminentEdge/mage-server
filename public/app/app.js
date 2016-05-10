@@ -229,6 +229,28 @@ function config($provide, $httpProvider, $routeProvider, $animateProvider) {
     resolve: resolveLogin(["ADMIN_ROLE"])
   });
 
+  // Admin sensorserver routes
+  $routeProvider.when('/admin/sensorservers', {
+    templateUrl:    'app/admin/sensorservers/sensorservers.html',
+    controller:     "AdminSensorServersController",
+    resolve: resolveLogin(["ADMIN_ROLE"])
+  });
+  $routeProvider.when('/admin/sensorservers/new/', {
+    templateUrl:    'app/admin/sensorservers/sensorserver.edit.html',
+    controller:     "AdminSensorServerEditController",
+    resolve: resolveLogin(["ADMIN_ROLE"])
+  });
+  $routeProvider.when('/admin/sensorservers/:sensorServerId/', {
+    templateUrl:    'app/admin/sensorservers/sensorserver.html',
+    controller:     "AdminSensorServerController",
+    resolve: resolveLogin(["ADMIN_ROLE"])
+  });
+  $routeProvider.when('/admin/sensorservers/:sensorServerId/edit', {
+    templateUrl:    'app/admin/sensorservers/sensorserver.edit.html',
+    controller:     "AdminSensorServerEditController",
+    resolve: resolveLogin(["ADMIN_ROLE"])
+  });
+
   // Admin settings routes
   $routeProvider.when('/admin/settings', {
     templateUrl:    'app/admin/settings/settings.html',
