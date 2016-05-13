@@ -2,12 +2,13 @@ angular
   .module('mage')
   .service('EventService', EventService);
 
-EventService.$inject = ['$rootScope', '$q', '$timeout', '$http', 'Event', 'ObservationService', 'LocationService', 'LayerService', 'FilterService', 'PollingService'];
+EventService.$inject = ['$rootScope', '$q', '$timeout', '$http', 'Event', 'ObservationService', 'LocationService', 'LayerService', 'SensorServerService', 'FilterService', 'PollingService'];
 
-function EventService($rootScope, $q, $timeout, $http, Event, ObservationService, LocationService, LayerService, FilterService, PollingService) {
+function EventService($rootScope, $q, $timeout, $http, Event, ObservationService, LocationService, LayerService, SensorServerService, FilterService, PollingService) {
   var observationsChangedListeners = [];
   var usersChangedListeners = [];
   var layersChangedListeners = [];
+  var sensorServersChangedListeners = [];
   var pollListeners = [];
   var eventsById = {};
   var pollingTimeout = null;
@@ -30,12 +31,14 @@ function EventService($rootScope, $q, $timeout, $http, Event, ObservationService
   function onEventChanged(event) {
     _.each(event.added, function(added) {
       fetchLayers(added);
+      fetchSensorServers(added);
     });
 
     _.each(event.removed, function(removed) {
       observationsChanged({removed: _.values(eventsById[removed.id].filteredObservationsById)});
       usersChanged({removed: _.values(eventsById[removed.id].filteredUsersById)});
       layersChanged({removed: _.values(eventsById[removed.id].layersById)}, removed);
+      sensorServersChanged({removed: _.values(eventsById[removed.id].sensorServersById)}, removed);
       delete eventsById[removed.id];
     });
   }
@@ -120,9 +123,11 @@ function EventService($rootScope, $q, $timeout, $http, Event, ObservationService
     addUsersChangedListener: addUsersChangedListener,
     removeUsersChangedListener: removeUsersChangedListener,
     addLayersChangedListener: addLayersChangedListener,
+    addSensorServersChangedListener: addSensorServersChangedListener,
     addPollListener: addPollListener,
     removePollListener: removePollListener,
     removeLayersChangedListener: removeLayersChangedListener,
+    removeSensorServersChangedListener: removeSensorServersChangedListener,
     getEventById: getEventById,
     saveObservation: saveObservation,
     archiveObservation: archiveObservation,
@@ -178,6 +183,16 @@ function EventService($rootScope, $q, $timeout, $http, Event, ObservationService
     }
   }
 
+  function addSensorServersChangedListener(listener) {
+    sensorServersChangedListeners.push(listener);
+
+    if (_.isFunction(listener.onSensorServersChanged)) {
+      _.each(_.values(eventsById), function(event) {
+        listener.onSensorServersChanged({added: _.values(event.sensorServersById)}, event); // TODO this could be old layers, admin panel might have changed layers
+      });
+    }
+  }
+
   function addPollListener(listener) {
     pollListeners.push(listener);
   }
@@ -190,6 +205,12 @@ function EventService($rootScope, $q, $timeout, $http, Event, ObservationService
 
   function removeLayersChangedListener(listener) {
     layersChangedListeners = _.reject(layersChangedListeners, function(l) {
+      return listener === l;
+    });
+  }
+
+  function removeSensorServersChangedListener(listener) {
+    sensorServersChangedListeners = _.reject(sensorServersChangedListeners, function(l) {
       return listener === l;
     });
   }
@@ -312,6 +333,18 @@ function EventService($rootScope, $q, $timeout, $http, Event, ObservationService
     });
   }
 
+  function sensorServersChanged(changed, event) {
+    _.each(sensorServersChangedListeners, function(listener) {
+      changed.added = changed.added || [];
+      changed.updated = changed.updated || [];
+      changed.removed = changed.removed || [];
+
+      if (_.isFunction(listener.onSensorServersChanged)) {
+        listener.onSensorServersChanged(changed, event);
+      }
+    });
+  }
+
   function fetch() {
     var event = FilterService.getEvent();
     if (!event) return;
@@ -353,6 +386,25 @@ function EventService($rootScope, $q, $timeout, $http, Event, ObservationService
 
       eventsById[event.id].layersById = _.indexBy(layers, 'id');
       layersChanged({added: added, removed: removed}, event);
+    });
+  }
+
+  function fetchSensorServers(event) {
+    return SensorServerService.getSensorServersForEvent(event).then(function(servers) {
+      var added = _.filter(servers, function(l) {
+        return !_.some(eventsById[event.id].sensorServersById, function(server, sensorserverId) {
+          return l.id === sensorserverId;
+        });
+      });
+
+      var removed = _.filter(eventsById[event.id].sensorServersById, function(server, sensorserverId) {
+        return !_.some(servers, function(l) {
+          return l.id === sensorserverId;
+        });
+      });
+
+      eventsById[event.id].sensorServersById = _.indexBy(servers, 'id');
+      sensorServersChanged({added: added, removed: removed}, event);
     });
   }
 

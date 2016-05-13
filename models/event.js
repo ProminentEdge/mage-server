@@ -42,6 +42,7 @@ var EventSchema = new Schema({
   collectionName: { type: String, required: true },
   teamIds: [{type: Schema.Types.ObjectId, ref: 'Team'}],
   layerIds: [{type: Number, ref: 'Layer'}],
+  sensorServerIds: [{type: Number, ref: 'SensorServer'}],
   form: {
     variantField: { type: String, required: false },
     userFields: [String],
@@ -129,6 +130,11 @@ function transform(event, ret) {
     if (event.populated('layerIds')) {
       ret.layers = ret.layerIds;
       delete ret.layerIds;
+    }
+
+    if (event.populated('sensorServerIds')) {
+      ret.sensorservers = ret.sensorServerIds;
+      delete ret.sensorServerIds;
     }
   }
 }
@@ -233,7 +239,7 @@ exports.getEvents = function(options, callback) {
       if (err) return callback(err);
 
       if (options.populate) {
-        Event.populate(events, [{path: 'teamIds'}, {path: 'layerIds'}], function(err, events) {
+        Event.populate(events, [{path: 'teamIds'}, {path: 'layerIds'}, {path: "sensorServerIds"}], function(err, events) {
           callback(err, events);
         });
       } else {
@@ -268,7 +274,7 @@ exports.getById = function(id, options, callback) {
       if (err) return callback(err);
 
       if (options.populate) {
-        event.populate([{path: 'teamIds'}, {path: 'layerIds'}], function(err, events) {
+        event.populate([{path: 'teamIds'}, {path: 'layerIds'}, {path: 'sensorServerIds'}], function(err, events) {
           callback(err, events);
         });
       } else {
@@ -444,6 +450,18 @@ exports.removeLayerFromEvents = function(layer, callback) {
   };
   Event.update({}, update, function(err) {
     callback(err);
+  });
+};
+
+exports.addSensorServer = function(event, server, callback) {
+  var update = {
+    $addToSet: {
+      sensorServerIds: server.id
+    }
+  };
+
+  Event.findByIdAndUpdate(event._id, update, function(err, event) {
+    callback(err, event);
   });
 };
 

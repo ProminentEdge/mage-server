@@ -9,13 +9,13 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
   $scope.wmsVersions = ['1.1.1', '1.3.0'];
   $scope.uploads = [{}];
   $scope.sensors = [];
-  $scope.selectedSensor = {name:"default", options:[] };
+
 
   if ($routeParams.sensorServerId) {
     SensorServer.get({id: $routeParams.sensorServerId}, function(server) {
       $scope.sensorserver = server;
        if( $scope.sensorserver.url) {
-        //the layer.url property holds onto the url as well as the sensor offer and parameters
+        //the sensorserver.url property holds onto the url as well as the sensor offer and parameters
         //everything is separated by & when the data is saved out. We cannot use the url as it is
         //and need to parse out the sensor and observable properties ourselves
         var strs = $scope.sensorserver.url.split('&');
@@ -35,45 +35,61 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
 
           //parse the xml string
           var xmlDoc = $.parseXML( response.data );
-          //jsonixParseSensors(response);
+          //jsonixParseSensors(response.data);
           parseSensors(xmlDoc, $scope.sensors);
+          
+          //iterate over all the sensors we got from GetCapabilities and mark
+          //the checkbox for the ones that are enabled (from the database)
           $scope.sensors.forEach(function (sensor) {
-            if(strs[1] && strs[1].indexOf(sensor.name) != -1) {
-              $scope.selectedSensor.name = sensor.name;
-
-              //look for the enabled sensor 'observable properties'
-              for(var p = 0; p < sensor.properties.length; p++) {
-                for(var strIndex = 0; strIndex < strs.length; strIndex++) {
-                  if(strs[strIndex].indexOf(sensor.properties[p].name) != -1) {
-                    sensor.properties[p].enabled = true;
+            $scope.sensorserver.sensors.forEach(function (serverSensor) {
+              if(sensor.name === serverSensor.name) {
+                sensor.enabled = serverSensor.enabled;
+                
+                //handle properties/checkbox enabling
+                for(var p = 0; p < sensor.properties.length; p++) {
+                  for(var k = 0; k < serverSensor.properties.length; k++) {
+                    if(sensor.properties[p].name === serverSensor.properties[k].name) {
+                      sensor.properties[p].enabled = serverSensor.properties[k].enabled;
+                    }
                   }
                 }
               }
-            }
+            });
           });
         }, function(err) { alert('url is invalid or server is down'); });
       }
     });
   } else {
-    $scope.sensorserver = new Layer();
+    $scope.sensorserver = new SensorServer();
   }
 
   $scope.saveSensorServer = function (sensorserver) {
-    if(sensorserver.type == 'Sensor') {
-       for(var i = 0; i < $scope.sensors.length; i++) {
-        if($scope.sensors[i].name === $scope.selectedSensor.name) {
-          sensorserver.url = sensorserver.url + "/&offering="+$scope.selectedSensor.name;
-          for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
-            if($scope.sensors[i].properties[p].enabled) {
-              sensorserver.url = sensorserver.url + "&observedProperty="+$scope.sensors[i].properties[p].name;
-            }
+
+    sensorserver.sensors = null;
+    for(var i = 0; i < $scope.sensors.length; i++) {
+      if($scope.sensors[i].enabled) {
+        var currsensor = {  
+          name:$scope.sensors[i].name, 
+          urlFragment: "&offering="+$scope.sensors[i].name,
+          startTime:$scope.sensors[i].startTime, 
+          endTime:$scope.sensors[i].endTime, 
+          enabled: true,
+          properties:[]
+        };
+        
+        //sensorserver.url = sensorserver.url + "/";
+        for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
+          if($scope.sensors[i].properties[p].enabled) {
+            var propName =  $scope.sensors[i].properties[p].name;
+            currsensor.properties.push({ name: propName, urlFragment: "&observedProperty="+propName, enabled: true });
           }
-          sensorserver.url = sensorserver.url + $scope.sensors[i].timePiece;
-          break;
         }
+        //sensorserver.url = sensorserver.url + $scope.sensors[i].timePiece;
+        if(!sensorserver.sensors)
+          sensorserver.sensors = [];
+        sensorserver.sensors.push(currsensor);
       }
     }
-
     sensorserver.$save({}, function() {
       $location.path('/admin/sensorservers/' + sensorserver.id);
     });
@@ -91,7 +107,7 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
       }).then(function(response) {
 
       //parse the xml string
-      var xmlDoc = $.parseXML( response );
+      var xmlDoc = $.parseXML( response.data );
       parseSensors(xmlDoc, $scope.sensors);
     }, function(err) {
       alert("url is invalid or server is down");
@@ -99,9 +115,9 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
   };
 
 
-  $scope.selectedSensorChanged = function() {
+  $scope.sensorEnabledChanged = function() {
     for(var i = 0; i < $scope.sensors.length; i++) {
-      if($scope.sensors[i].name === $scope.selectedSensor.name) {
+      if($scope.sensors[i].enabled) {
         //alert($scope.sensors[i].name);
       } else {
         if($scope.sensors[i].properties != null) {
@@ -115,28 +131,10 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
 }
 
 function jsonixParseSensors(xmlStr) {
-  var MyModule = {
-    name: 'MyModule',
-    typeInfos: [{
-        type: 'classInfo',
-        localName: 'AnyElementType',
-        propertyInfos: [{
-            type: 'anyElement',
-            allowDom: true,
-            allowTypedObject:true,
-            name: 'any',
-            collection: false
-        }]
-    }],
-    elementInfos: [{
-        elementName: 'sos:Capabilities',
-        typeInfo: 'MyModule.AnyElementType'
-    }]
-  };
-
-  var context = new Jsonix.Context([MyModule], {namespacePrefixes: {'http://www.opengis.net/sos/2.0':'sos'}});
+  var module = SOS_2_0_Module_Factory();
+  var context = new Jsonix.Context([SOS_2_0_Module_Factory]);
   var unmarshaller = context.createUnmarshaller();
-  var data = unmarshaller.unmarshalString('<sos:Capabilities version=\"2.0.0\" >hello</sos:Capabilities>');
+  var data = unmarshaller.unmarshalString(xmlStr,{namespacePrefixes: {'http://www.opengis.net/sos/2.0':'sos'}});
   return data;
 }
 
@@ -193,30 +191,6 @@ function parseSensors(root, collection) {
             sensor.endTime = '2099-08-29T16:17:29.783Z';
             sensor.timePiece += sensor.startTime+'/'+sensor.endTime;
           }
-
-          /*// if "now" is anywhere in the time rage, then assume it is a live query from now to future
-          if($(sensorXMLNode.children[k].children[0]).find('[indeterminatePosition="now"]')) {
-             sensor.timePiece += 'now/2020-08-29T16:17:29.783Z';
-          }
-          else {
-            //otherwise get the start time
-            sensor.timePiece += sensorXMLNode.children[k].children[0].children[0].innerHTML + '/';
-
-            //if no ending time is specified then just choose to make the duration five minutes from the start
-            if (sensorXMLNode.children[k].children[0].children.length < 2 || sensorXMLNode.children[k].children[0].children[1].innerHTML === "") {
-              var toks = sensorXMLNode.children[k].children[0].children[0].innerHTML.split(':');
-              var startMinute = Number(toks[1]);
-              startMinute += 5;
-              toks[1] = startMinute.toString();
-              sensor.timePiece += toks[0] + ":" + toks[1] + ":" + toks[2] + '&replaySpeed=2';
-
-            }
-            else {
-
-              sensor.timePiece += sensorXMLNode.children[k].children[0].children[1].innerHTML + '&replaySpeed=2';
-
-            }
-          }*/
         }
       }
       collection.push(sensor);

@@ -50,13 +50,13 @@
               <div ng-show = "sensors.length > 0">
                 <label class="control-label">Sensors</label>
                 <div ng-repeat="x in sensors">
-                  <input type = "radio" name = "selected-sensor" value = {{x.name}} ng-model = "selectedSensor.name" ng-change = "selectedSensorChanged()"/>
+                  <input type = "checkbox" name = {{x.name}} value = {{x.name}} ng-model = "x.enabled" ng-change = "sensorEnabledChanged()"/>
 
                   <b>ID:</b> {{ x.name }} <br>
                   <b>Description:</b> {{ x.description }} <br>
                   <b>Time period: </b> <input type = "text" ng-model = "x.startTime"/> <input type = "text" ng-model = "x.endTime"/> <br>
-                  <div ng-show = "x.name === selectedSensor.name && x.properties.length > 0"><b>Properties: </b></div>
-                  <div ng-show = "x.name === selectedSensor.name" ng-repeat="prop in x.properties">
+                  <div ng-show = "x.enabled && x.properties.length > 0"><b>Properties: </b></div>
+                  <div ng-show = "x.enabled" ng-repeat="prop in x.properties">
                     <input type = "checkbox" ng-model = "prop.enabled" ng-true-value = "true" ng-false-value = "false" />
                      {{ prop.name }}
                      <br>

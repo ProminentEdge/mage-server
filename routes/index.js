@@ -134,7 +134,7 @@ module.exports = function(app, security) {
   app.param('sensorserverId', function(req, res, next, sensorserverId) {
     SensorServer.getById(sensorserverId, function(server) {
       if (!server) {
-        return res.status(404).send("Layer not found: ");
+        return res.status(404).send("Server not found: ");
       }
 
       req.sensorserver = server;

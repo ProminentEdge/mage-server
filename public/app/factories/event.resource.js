@@ -57,6 +57,13 @@ function Event($rootScope, $resource, $http, LocalStorageService) {
       headers: {
         'Content-Type': 'application/json'
       }
+    },
+    addSensorServer: {
+      method: 'POST',
+      url: '/api/events/:id/sensorservers',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     }
   });
 

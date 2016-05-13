@@ -174,7 +174,7 @@ module.exports = function(app, security) {
     }
   );
 
-  // Archive a sensorserver
+  // Delete a sensorserver
   app.delete(
     '/api/sensorservers/:sensorserverId',
     access.authorize('DELETE_SENSORSERVER'),

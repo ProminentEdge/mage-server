@@ -36,7 +36,7 @@ function AdminLayerEditController($scope, $http, $location, $routeParams, LocalS
 
           //parse the xml string
           var xmlDoc = $.parseXML( response );
-          jsonixParseSensors(response);
+          //jsonixParseSensors(response);
           parseSensors(xmlDoc, $scope.sensors);
           $scope.sensors.forEach(function (sensor) {
             if(strs[1] && strs[1].indexOf(sensor.name) != -1) {

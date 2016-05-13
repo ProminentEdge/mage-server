@@ -150,6 +150,11 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
   };
   EventService.addLayersChangedListener(layersChangedListener);
 
+  var sensorServersChangedListener = {
+    onSensorServersChanged: onSensorServersChanged
+  };
+  EventService.addSensorServersChangedListener(sensorServersChangedListener);
+
   var filterChangedListener = {
     onFilterChanged: onFilterChanged
   };
@@ -203,6 +208,171 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
         $scope.filteredInterval = null;
       }
     }
+  }
+
+  function onSensorServersChanged(changed, event) {
+    
+    _.each(changed.added, function(sensorserver){
+      _.each(sensorserver.sensors, function(sensor) {
+        
+        var reqTimeFragURL = '&temporalFilter=phenomenonTime,'+sensor.startTime+'/'+sensor.endTime+'&replaySpeed=1';
+        reqURL = sensorserver.url + '/sensorhub/sos?service=SOS&version=2.0&request=GetResult'+sensor.urlFragment;//+property.urlFragment+reqTimeFrag;
+        var sensorLayer = {
+          type:'Sensor',
+          name: sensor.name,
+          observedProperties: sensor.properties,
+          eventId: event.id,
+          url:reqURL,
+          reqTimeFrag: reqTimeFragURL,
+          feature: {
+            id: sensor.name,
+            geometry: {
+              type: 'Point',
+              coordinates: [0,0]
+            },
+            type: 'Sensor',
+            properties: {
+              description: sensor.description,
+              name: sensor.name + "_pointer"
+            }
+          }
+        };
+
+        AddSensorLayer(sensorLayer, event);
+      });
+    });
+  }
+  
+
+  function AddSensorLayer(sensor) {
+
+    //container for the content that will showup in the marker pop-up
+    var contentHTML = "";
+    
+    _.each(sensor.observedProperties, function(property) {
+      var streamURL = sensor.url + property.urlFragment + sensor.reqTimeFrag;
+      var observedProperty = property.name;
+
+      if (observedProperty.indexOf('Video') != -1) {
+        contentHTML += '<img width = \"128\" height = \"96\" src = \"' + streamURL + '\"></img>';
+
+      } else {
+
+        var contentID = 'Content_' + sensor.name + '_' + observedProperty;
+        contentID = contentID.replace(/\//g, '-');
+        contentID = contentID.replace(/ /g, '-');
+        contentID = contentID.replace(/=/g, '-');
+        contentID = contentID.replace(/:/g, '-');
+        contentID = contentID.replace(/\./g, '-');
+        contentHTML += '<div style = \"max-width:128; word-wrap:break-word;\" id = \"' + contentID + '\"></div>';
+
+        var reader = new FileReader();
+        reader.prop = observedProperty;
+        reader.contentID = contentID;
+        reader.feature = sensor.feature;
+        reader.sensor = sensor;
+
+        reader.onload = function () {
+          var rec = this.result;
+          if (rec === "")
+            return;
+          if (this.prop.indexOf('Location') != -1) {
+            var data = rec.trim().split(",");
+            var lat = parseFloat(data[1]);
+            var lon = parseFloat(data[2]);
+            var alt = parseFloat(data[3]);
+            var ltlg = {'lat': lat, 'lng': lon};
+
+            var contentTag = document.getElementById(this.contentID);
+            if (contentTag != null)
+              contentTag.innerHTML = 'lon: ' + lon.toFixed(10) + '<br>lat: ' + lat.toFixed(10) + '<br>alt: ' + alt.toFixed(1);
+
+            
+            this.feature.type = 'Sensor';
+            this.feature.geometry.coordinates = [lon, lat];
+            MapService.updateMarker(this.feature, this.sensor.name);
+          }
+          else if (this.prop.indexOf('Quaternion') != -1) {
+
+            var data = rec.trim().split(",");
+            var qx = parseFloat(data[1]);
+            var qy = parseFloat(data[2]);
+            var qz = parseFloat(data[3]);
+            var qw = parseFloat(data[4]);
+
+            var q = new THREE.Quaternion(qx, qy, qz, qw);
+            var look = new THREE.Vector3(0, 0, 1);
+            look.applyQuaternion(q);
+            look.y *= -1;
+            var dot = look.dot(new THREE.Vector3(0, 1, 0));
+
+            if (look.x > 0)
+              yaw = Math.acos(dot) * (180 / Math.PI);
+            else
+              yaw = -Math.acos(dot) * (180 / Math.PI);
+            //var yaw = 90 - (180/Math.PI*Math.atan2(-look.y, -look.x))+90;
+
+
+            var contentTag = document.getElementById(this.contentID);
+            if (contentTag != null) {
+              //contentTag.innerHTML = 'x: ' + look.x.toFixed(10) + '<br>y: ' + look.y.toFixed(10) + '<br>z: ' + look.z.toFixed(10);
+              contentTag.innerHTML = '<br>ang: ' + yaw.toFixed(2);
+            }
+            this.feature.angle = yaw;
+            MapService.updateMarker(this.feature, this.sensor.name);
+
+          }
+          else {
+            var contentTag = document.getElementById(this.contentID);
+            if (contentTag != null)
+              contentTag.textContent = 'Data: ' + rec;
+          }
+        }
+
+        var ws = new WebSocket(streamURL.replace('http://', 'ws://'));
+        ws.reader = reader;
+        ws.onmessage = function (event) {
+          this.reader.readAsText(event.data);
+        }
+        ws.onerror = function (event) {
+          this.close();
+        }
+      }
+    });
+
+    var newMarker = {
+      eventId: sensor.eventId,
+      type: 'Sensor',
+      geometry: {
+        type: 'Point',
+        coordinates: sensor.feature.geometry.coordinates
+      },
+    };
+
+    /*var myIcon = L.AwesomeMarkers.newDivIcon({
+     icon: 'plus',
+     color: 'cadetblue'
+     });*/
+
+    var myIcon = L.icon({
+      iconUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
+      iconRetinaUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
+      iconSize: [32, 32],
+      popupAnchor: [0, -18],
+      //shadowUrl: 'my-icon-shadow.png',
+      //shadowRetinaUrl: 'my-icon-shadow@2x.png',
+      //shadowSize: [68, 95],
+      //shadowAnchor: [22, 94]
+    });
+
+    MapService.createMarker(newMarker, {
+      layerId: sensor.name,
+      selected: true,
+      clickable: true,
+      icon:myIcon,
+      popup: '<div style = \"min-width:128px;\"><strong><u>' + sensor.name + '</u></strong></div> <br> ' + contentHTML
+    });
+
   }
 
   function onLayersChanged(changed, event) {
@@ -530,6 +700,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
   $scope.$on('$destroy', function() {
     FilterService.removeListener(filterChangedListener);
     EventService.removeLayersChangedListener(layersChangedListener);
+    EventService.removeSensorServersChangedListener(sensorServersChangedListener);
     EventService.removeObservationsChangedListener(observationsChangedListener);
     EventService.removeUsersChangedListener(usersChangedListener);
     EventService.removePollListener(pollListener);

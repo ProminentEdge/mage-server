@@ -318,7 +318,19 @@ module.exports = function(app, security) {
       });
     }
   );
+    app.post(
+        '/api/events/:eventId/sensorservers',
+        passport.authenticate('bearer'),
+        access.authorize('UPDATE_EVENT'),
+        function(req, res, next) {
+            Event.addSensorServer(req.event, req.body, function(err, event) {
+                if (err) return next(err);
 
+                res.json(event);
+            });
+        }
+    );
+    
   app.delete(
     '/api/events/:eventId/layers/:id',
     passport.authenticate('bearer'),

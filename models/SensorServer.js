@@ -5,11 +5,21 @@ var mongoose = require('mongoose')
 
 var Schema = mongoose.Schema;
 
+var sensorSchema = new Schema({
+  name: String,
+  urlFragment: String,
+  startTime: String,
+  endTime: String,
+  enabled:Boolean,
+  properties: [{name:String, urlFragment:String, enabled:Boolean}]
+});
+
 var sensorServerSchema = new Schema({
   _id: {type: Number, required: true, unique: true},
   name: { type: String, required: true, unique: true },
   url: {type: String, required: true },
-  description: String
+  description: String,
+  sensors: [sensorSchema]
 },{
   versionKey:false
 });
@@ -71,13 +81,21 @@ exports.getSensorServers = function(filter, callback) {
 };
 
 exports.getById = function(id, callback) {
-  SensorServer.findById(id, function (err, layer) {
-    callback(layer);
+  SensorServer.findById(id, function (err, server) {
+    callback(server);
   });
 };
 
 exports.count = function(callback) {
   SensorServer.count({}, function(err, count) {
     callback(err, count);
+  });
+};
+
+exports.remove = function(server, callback) {
+  server.remove(function(err) {
+    if (err) return callback(err);
+    else
+      callback(err, server);
   });
 };

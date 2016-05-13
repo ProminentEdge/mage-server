@@ -93,7 +93,7 @@
                     <div class="col-md-12">
                       <ui-select ng-model="event.selected" theme="bootstrap">
                         <ui-select-match placeholder="Select an event">{{$select.selected.name}}</ui-select-match>
-                        <ui-select-choices repeat="event in nonLayerEvents | orderBy: 'name' | filter: $select.search">
+                        <ui-select-choices repeat="event in nonSensorServerEvents | orderBy: 'name' | filter: $select.search">
                           <div ng-bind-html="event.name | highlight: $select.search"></div>
                         </ui-select-choices>
                       </ui-select>
@@ -104,7 +104,7 @@
 
                   <div class="row">
                      <div class="col-md-12">
-                       <button class="btn btn-success" ng-click="addEventToLayer(event.selected)" ng-disabled="event.selected == null"><i class="fa fa-plus"></i> Add Event</button>
+                       <button class="btn btn-success" ng-click="addEventToSensorServer(event.selected)" ng-disabled="event.selected == null"><i class="fa fa-plus"></i> Add Event</button>
                      </div>
                   </div>
                 </div>
@@ -131,11 +131,11 @@
                 </div>
               </div>
 
-              <!--<div class="row">
+              <div class="row">
                 <div class="col-sm-12">
                   <div class="admin-table">
                     <div class="well-item"
-                        ng-repeat="e in (filteredEvents = (layerEvents | filter:filterEvents)) | orderBy:'name' | offset: eventsPage*eventsPerPage | limitTo:eventsPerPage" >
+                        ng-repeat="e in (filteredEvents = (sensorserverEvents | filter:filterEvents)) | orderBy:'name' | offset: eventsPage*eventsPerPage | limitTo:eventsPerPage" >
                       <div class="row pointer" ng-click="gotoEvent(e)">
                         <div class="col-md-12">
                           <span class="pull-right" ng-show="editEvent">
@@ -152,7 +152,7 @@
                     </div>
                   </div>
                 </div>
-              </div>-->
+              </div>
               <div class="row">
                 <div class="col-md-12">
                   <ul class="pager pull-right">
