@@ -108,6 +108,10 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
           }
         }
 
+        if(!sensorserver.lastSensorList)
+          sensorserver.lastSensorList = [];
+        sensorserver.lastSensorList.push(currsensor.name);
+        
         if(!sensorserver.sensors)
           sensorserver.sensors = [];
         sensorserver.sensors.push(currsensor);
@@ -131,17 +135,36 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
 
       //parse the xml string
       var xmlDoc = $.parseXML( response.data );
-      parseSensors(xmlDoc, $scope.sensors);
 
+      parseSensors(xmlDoc, $scope.sensors);
+      var recentSensorNames = [];
+
+      if(!$scope.sensorserver.lastSensorList)
+        $scope.sensorserver.lastSensorList = [];
+      
+      $scope.sensors.forEach(function (sensor) {
+        recentSensorNames.push(sensor.name);
+        var newFound = true;
+        for(var lsIndex = 0; lsIndex < $scope.sensorserver.lastSensorList.length; lsIndex++) {
+          if($scope.sensorserver.lastSensorList[lsIndex] === sensor.name) {
+            sensor.isNew = false;
+            newFound = false
+          }
+        }
+        if(newFound && $scope.sensorserver.lastSensorList.length > 0)
+          sensor.isNew = true;
+      });
+      $scope.sensorserver.lastSensorList = recentSensorNames;
+      
       if(!$scope.sensorserver.sensors) 
           return;
+
       $scope.sensorserver.sensors.forEach(function (serverSensor) {
-     
         var serverSensorExistsInGetCapabilitiesSensors = false;
         // Test for sensor disconnection
         $scope.sensors.forEach(function (sensor) {
           if(sensor.name === serverSensor.name) {
-            //we need to keep check to see if there are any sensors stored in the database that
+            //we need to check to see if there are any sensors stored in the database that
             //don't exist in the get capabilities and notify the user
             serverSensorExistsInGetCapabilitiesSensors = true;
           }
@@ -186,25 +209,6 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
         }
       }
     }
-    
-    
-    // for(var i = 0; i < $scope.sensors.length; i++) {
-    //   if($scope.sensors[i].enabled) {
-    //     //alert($scope.sensors[i].name);
-    //     if(!$scope.sensors[i].userStartTime) {
-    //       $scope.sensors[i].userStartTime = $scope.sensors[i].startTime;
-    //     }
-    //     if(!$scope.sensors[i].userEndTime) {
-    //       $scope.sensors[i].userEndTime = $scope.sensors[i].endTime;
-    //     }
-    //   } else {
-    //     if($scope.sensors[i].properties != null) {
-    //       for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
-    //         $scope.sensors[i].properties[p].enabled = false;
-    //       }
-    //     }
-    //   }
-    // }
   }
 }
 
@@ -286,7 +290,15 @@ function parseSensors(root, collection) {
           }
         }
       }
-      collection.push(sensor);
+      var found = false;
+      for(var c = 0; c < collection.length; c++) {
+        if(collection[c].name === sensor.name) {
+          found = true;
+          break;
+        }
+      }
+      if(!found)
+        collection.push(sensor);
     }
   }
   return;

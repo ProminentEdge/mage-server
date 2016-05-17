@@ -56,7 +56,7 @@
                     <h4>
                       <a class="btn btn-default" ng-show = "!x.enabled" ng-click = "sensorEnabledChanged(x)">Off</a>
                       <a class="btn btn-success" ng-show = "x.enabled" ng-click = "sensorEnabledChanged(x)">On</a>
-                      <b> </b> {{ x.name }}
+                      {{ x.name }} <span class="pull-right"><b ng-show = "x.isNew">NEW!</b></span>
                     </h4>
                   </div>
                   <table width = "100%">

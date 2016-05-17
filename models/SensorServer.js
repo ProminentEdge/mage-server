@@ -21,7 +21,8 @@ var sensorServerSchema = new Schema({
   name: { type: String, required: true, unique: true },
   url: {type: String, required: true },
   description: String,
-  sensors: [sensorSchema]
+  sensors: [sensorSchema],
+  lastSensorList : [{type: String}]
 },{
   versionKey:false
 });
@@ -56,12 +57,9 @@ exports.create = function(sensorServer, callback) {
   Counter.getNext('sensorserver', function(id) {
     sensorServer._id = id;
     SensorServer.create(sensorServer, function(err, newServer) {
-      if (err) return callback(err);
-
-      //if (layer.type === 'Feature' || layer.type === 'Sensor') {
-      //  createFeatureCollection(newLayer);
-      //}
-
+      if (err) 
+        return callback(err);
+      
       callback(err, newServer);
     });
   });
