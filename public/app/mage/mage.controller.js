@@ -215,7 +215,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
     _.each(changed.added, function(sensorserver){
       _.each(sensorserver.sensors, function(sensor) {
         
-        var reqTimeFragURL = '&temporalFilter=phenomenonTime,'+sensor.startTime+'/'+sensor.endTime+'&replaySpeed=1';
+        var reqTimeFragURL = '&temporalFilter=phenomenonTime,'+sensor.userStartTime+'/'+sensor.userEndTime+'&replaySpeed=1';
         reqURL = sensorserver.url + '/sensorhub/sos?service=SOS&version=2.0&request=GetResult'+sensor.urlFragment;//+property.urlFragment+reqTimeFrag;
         var sensorLayer = {
           type:'Sensor',
@@ -248,11 +248,16 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
 
     //container for the content that will showup in the marker pop-up
     var contentHTML = "";
-    
+    var hasRotation = false;
     _.each(sensor.observedProperties, function(property) {
       var streamURL = sensor.url + property.urlFragment + sensor.reqTimeFrag;
       var observedProperty = property.name;
-
+      
+      //we just use this variable to swap out the icon for the marker
+      //if it has rotation so the user can see the heading
+      if(property.name.indexOf('Quaternion') != -1)
+        hasRotation = true;
+      
       if (observedProperty.indexOf('Video') != -1) {
         contentHTML += '<img width = \"128\" height = \"96\" src = \"' + streamURL + '\"></img>';
 
@@ -285,8 +290,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
 
             var contentTag = document.getElementById(this.contentID);
             if (contentTag != null)
-              contentTag.innerHTML = 'lon: ' + lon.toFixed(10) + '<br>lat: ' + lat.toFixed(10) + '<br>alt: ' + alt.toFixed(1);
-
+              contentTag.innerHTML = 'lon: ' + lon.toFixed(10) + '<br>lat: ' + lat.toFixed(10) + '<br>alt: ' + alt.toFixed(2);
             
             this.feature.type = 'Sensor';
             this.feature.geometry.coordinates = [lon, lat];
@@ -316,7 +320,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
             var contentTag = document.getElementById(this.contentID);
             if (contentTag != null) {
               //contentTag.innerHTML = 'x: ' + look.x.toFixed(10) + '<br>y: ' + look.y.toFixed(10) + '<br>z: ' + look.z.toFixed(10);
-              contentTag.innerHTML = '<br>ang: ' + yaw.toFixed(2);
+              contentTag.innerHTML = 'ang: ' + yaw.toFixed(2);
             }
             this.feature.angle = yaw;
             MapService.updateMarker(this.feature, this.sensor.name);
@@ -354,16 +358,19 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
      color: 'cadetblue'
      });*/
 
-    var myIcon = L.icon({
-      iconUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
-      iconRetinaUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
-      iconSize: [32, 32],
-      popupAnchor: [0, -18],
-      //shadowUrl: 'my-icon-shadow.png',
-      //shadowRetinaUrl: 'my-icon-shadow@2x.png',
-      //shadowSize: [68, 95],
-      //shadowAnchor: [22, 94]
-    });
+    var myIcon = null;
+    if(hasRotation) {
+      myIcon = L.icon({
+        iconUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
+        iconRetinaUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
+        iconSize: [32, 32],
+        popupAnchor: [0, -18],
+        //shadowUrl: 'my-icon-shadow.png',
+        //shadowRetinaUrl: 'my-icon-shadow@2x.png',
+        //shadowSize: [68, 95],
+        //shadowAnchor: [22, 94]
+      });
+    }
 
     MapService.createMarker(newMarker, {
       layerId: sensor.name,
@@ -514,12 +521,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
               coordinates: featureCollection.features[0].geometry.coordinates
             },
           };
-
-          /*var myIcon = L.AwesomeMarkers.newDivIcon({
-            icon: 'plus',
-            color: 'cadetblue'
-          });*/
-
+          
           var myIcon = L.icon({
               iconUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',
               iconRetinaUrl: 'https://dl.dropboxusercontent.com/u/14659995/location-north-512.png',

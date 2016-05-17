@@ -1,11 +1,11 @@
 <div class="modal-header">
-  <h3 class="modal-title">Delete "{{sensorserver.name}}"</h3>
+  <h3 class="modal-title">Delete "{{sensorServer.name}}"</h3>
 </div>
 
 <div class="modal-body">
   <div class="row">
     <div class="col-md-12">
-      <p>Layer "{{sensorserver.name}}" will be deleted.
+      <p>Layer "{{sensorServer.name}}" will be deleted.
         <strong>This cannot be undone, all data will be unrecoverable.</strong>
       </p>
     </div>
@@ -13,13 +13,13 @@
 
   <div class="row">
     <div class="col-md-12">
-      <p>Do you want to delete the "{{sensorserver.name}}" layer?<p>
+      <p>Do you want to delete the "{{sensorServer.name}}" layer?<p>
     </div>
   </div>
 
 </div>
 
 <div class="modal-footer">
-  <button class="btn btn-danger pull-left" ng-click="deleteSensorServer(sensorserver, true)" ngm-tap="deleteSensorServer(sensorserver, true)"><i class="icon-trash"> </i>Confirm Delete Sensor Server</button>
+  <button class="btn btn-danger pull-left" ng-click="deleteSensorServer(sensorServer)" ngm-tap="deleteSensorServer(sensorServer)"><i class="icon-trash"> </i>Confirm Delete Sensor Server</button>
   <button class="btn btn-default" ng-click="cancel()" ngm-tap="cancel()">Cancel</button>
 </div>

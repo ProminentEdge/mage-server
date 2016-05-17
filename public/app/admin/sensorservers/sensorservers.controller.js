@@ -49,7 +49,7 @@ function AdminSensorServersController($scope, $filter, $uibModal, $location, Sen
     $event.stopPropagation();
 
     var modalInstance = $uibModal.open({
-      templateUrl: '/app/admin/sensorServers/sensorServer-delete.html',
+      templateUrl: '/app/admin/sensorservers/sensorserver-delete.html',
       resolve: {
         sensorServer: function () {
           return server;
@@ -58,9 +58,9 @@ function AdminSensorServersController($scope, $filter, $uibModal, $location, Sen
       controller: ['$scope', '$uibModalInstance', 'sensorServer', function ($scope, $uibModalInstance, sensorServer) {
         $scope.sensorServer = sensorServer;
 
-        $scope.deleteSensorServer = function(sensorServer) {
-          sensorServer.$delete(function() {
-            $uibModalInstance.close(sensorServer);
+        $scope.deleteSensorServer = function(s) {
+          s.$delete(function() {
+            $uibModalInstance.close(s);
           });
         };
 

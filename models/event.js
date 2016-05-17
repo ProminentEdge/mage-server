@@ -465,6 +465,15 @@ exports.addSensorServer = function(event, server, callback) {
   });
 };
 
+exports.removeSensorServerFromEvents = function(server, callback) {
+  var update = {
+    $pull: {sensorServerIds: server._id}
+  };
+  Event.update({}, update, function(err) {
+    callback(err);
+  });
+};
+
 exports.removeTeamFromEvents = function(team, callback) {
   var update = {
     $pull: {teamIds: team._id}

@@ -131,14 +131,14 @@ function LeafletController($rootScope, $scope, $interval, $timeout, MapService, 
       var layer;
       if (options.icon) {
         layer = L.rotatedMarker(latlng, {
-          draggable: options.draggable,
+          draggable: false,
           icon: options.icon,
-          angle:90
+          angle:0
         });
       }
       else {
         layer = L.marker(latlng, {
-          draggable: options.draggable,
+          draggable: false,
         });
       }
 

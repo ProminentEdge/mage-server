@@ -42,9 +42,19 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
           //the checkbox for the ones that are enabled (from the database)
           $scope.sensors.forEach(function (sensor) {
             $scope.sensorserver.sensors.forEach(function (serverSensor) {
+              
+              /* Test case for sensor disconnection
+              if(serverSensor.name === 'urn:mysos:offering03') {
+                return;
+              }*/
+              
               if(sensor.name === serverSensor.name) {
+                //we need to keep check to see if there are any sensors stored in the database that
+                //don't exist in the get capabilities and notify the user
+                serverSensor.exists = true; 
                 sensor.enabled = serverSensor.enabled;
-                
+                sensor.userStartTime = serverSensor.userStartTime ? serverSensor.userStartTime : serverSensor.startTime;
+                sensor.userEndTime = serverSensor.userEndTime ? serverSensor.userEndTime : serverSensor.endTime;
                 //handle properties/checkbox enabling
                 for(var p = 0; p < sensor.properties.length; p++) {
                   for(var k = 0; k < serverSensor.properties.length; k++) {
@@ -56,6 +66,17 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
               }
             });
           });
+
+          var disconnectedSensorsMsg = 'MAGE has detected the following sensors have been disconnected since the last configuration was saved: ';
+          var showAlert = false;
+          $scope.sensorserver.sensors.forEach(function (serverSensor) {
+            if(!serverSensor.exists) {
+              disconnectedSensorsMsg += serverSensor.name + '\n';
+              showAlert = true;
+            }
+          });
+          if(showAlert)
+            alert(disconnectedSensorsMsg);
         }, function(err) { alert('url is invalid or server is down'); });
       }
     });
@@ -64,7 +85,8 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
   }
 
   $scope.saveSensorServer = function (sensorserver) {
-
+    //Note: saving does not check any diffs between the original server data from the database
+    //it overwrites all the data for this server with what exists in the UI. This ensures data is exactly what the user expects.
     sensorserver.sensors = null;
     for(var i = 0; i < $scope.sensors.length; i++) {
       if($scope.sensors[i].enabled) {
@@ -72,19 +94,20 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
           name:$scope.sensors[i].name, 
           urlFragment: "&offering="+$scope.sensors[i].name,
           startTime:$scope.sensors[i].startTime, 
-          endTime:$scope.sensors[i].endTime, 
+          endTime:$scope.sensors[i].endTime,
+          userStartTime:$scope.sensors[i].userStartTime,
+          userEndTime:$scope.sensors[i].userEndTime,
           enabled: true,
           properties:[]
         };
-        
-        //sensorserver.url = sensorserver.url + "/";
+
         for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
           if($scope.sensors[i].properties[p].enabled) {
             var propName =  $scope.sensors[i].properties[p].name;
             currsensor.properties.push({ name: propName, urlFragment: "&observedProperty="+propName, enabled: true });
           }
         }
-        //sensorserver.url = sensorserver.url + $scope.sensors[i].timePiece;
+
         if(!sensorserver.sensors)
           sensorserver.sensors = [];
         sensorserver.sensors.push(currsensor);
@@ -109,24 +132,79 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
       //parse the xml string
       var xmlDoc = $.parseXML( response.data );
       parseSensors(xmlDoc, $scope.sensors);
+
+      if(!$scope.sensorserver.sensors) 
+          return;
+      $scope.sensorserver.sensors.forEach(function (serverSensor) {
+     
+        var serverSensorExistsInGetCapabilitiesSensors = false;
+        // Test for sensor disconnection
+        $scope.sensors.forEach(function (sensor) {
+          if(sensor.name === serverSensor.name) {
+            //we need to keep check to see if there are any sensors stored in the database that
+            //don't exist in the get capabilities and notify the user
+            serverSensorExistsInGetCapabilitiesSensors = true;
+          }
+        }); 
+        if(!serverSensorExistsInGetCapabilitiesSensors) {
+          serverSensor.exists = false;
+        }
+      });
+
+      var disconnectedSensorsMsg = 'MAGE has detected the following sensors have been disconnected since the last configuration was saved: ';
+      var showAlert = false;
+      $scope.sensorserver.sensors.forEach(function (serverSensor) {
+        if(!serverSensor.exists) {
+          disconnectedSensorsMsg += serverSensor.name + '\n';
+          showAlert = true;
+        }
+      });
+      if(showAlert)
+        alert(disconnectedSensorsMsg);
+
     }, function(err) {
       alert("url is invalid or server is down");
     });
   };
 
 
-  $scope.sensorEnabledChanged = function() {
-    for(var i = 0; i < $scope.sensors.length; i++) {
-      if($scope.sensors[i].enabled) {
-        //alert($scope.sensors[i].name);
-      } else {
-        if($scope.sensors[i].properties != null) {
-          for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
-            $scope.sensors[i].properties[p].enabled = false;
-          }
+  $scope.sensorEnabledChanged = function(sensor) {
+    
+    sensor.enabled = !sensor.enabled;
+    
+    if(sensor.enabled) {
+      if(!sensor.userStartTime) {
+        sensor.userStartTime = sensor.startTime;
+      }
+      if(!sensor.userEndTime) {
+        sensor.userEndTime = sensor.endTime;
+      }
+    } else {
+      if(sensor.properties != null) {
+        for(var p = 0; p <sensor.properties.length; p++) {
+          sensor.properties[p].enabled = false;
         }
       }
     }
+    
+    
+    // for(var i = 0; i < $scope.sensors.length; i++) {
+    //   if($scope.sensors[i].enabled) {
+    //     //alert($scope.sensors[i].name);
+    //     if(!$scope.sensors[i].userStartTime) {
+    //       $scope.sensors[i].userStartTime = $scope.sensors[i].startTime;
+    //     }
+    //     if(!$scope.sensors[i].userEndTime) {
+    //       $scope.sensors[i].userEndTime = $scope.sensors[i].endTime;
+    //     }
+    //   } else {
+    //     if($scope.sensors[i].properties != null) {
+    //       for(var p = 0; p <$scope.sensors[i].properties.length; p++) {
+    //         $scope.sensors[i].properties[p].enabled = false;
+    //       }
+    //     }
+    //   }
+    // }
   }
 }
 
@@ -185,11 +263,26 @@ function parseSensors(root, collection) {
               sensor.endTime = sensorXMLNode.children[k].children[0].children[1].innerHTML;
               sensor.timePiece += sensor.endTime + '&replaySpeed=2';
             }
+            
+            //only initialize these values if they are not already set
+            // if(!sensor.userStartTime) {
+            //   sensor.userStartTime = sensor.startTime;
+            // }
+            // if(!sensor.userEndTime) {
+            //   sensor.userEndTime = sensor.endTime;
+            //}
           } else {
             //immediate case
             sensor.startTime = 'now';
             sensor.endTime = '2099-08-29T16:17:29.783Z';
             sensor.timePiece += sensor.startTime+'/'+sensor.endTime;
+
+            // if(!sensor.userStartTime) {
+            //   sensor.userStartTime = sensor.startTime;
+            // }
+            // if(!sensor.userEndTime) {
+            //   sensor.userEndTime = sensor.endTime;
+            // }
           }
         }
       }

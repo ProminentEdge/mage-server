@@ -78,7 +78,7 @@ function AdminSensorServerController($scope, $uibModal, $routeParams, $location,
         }
       },
       controller: ['$scope', '$uibModalInstance', 'sensorserver', function ($scope, $uibModalInstance, sensorserver) {
-        $scope.sensorserver = sensorserver;
+        $scope.sensorServer = sensorserver;
 
         $scope.deleteSensorServer = function(sensorserver) {
           sensorserver.$delete(function() {

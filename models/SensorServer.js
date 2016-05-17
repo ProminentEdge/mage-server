@@ -10,6 +10,8 @@ var sensorSchema = new Schema({
   urlFragment: String,
   startTime: String,
   endTime: String,
+  userStartTime: String,
+  userEndTime: String,
   enabled:Boolean,
   properties: [{name:String, urlFragment:String, enabled:Boolean}]
 });
@@ -38,6 +40,12 @@ sensorServerSchema.set("toObject", {
 
 sensorServerSchema.set("toJSON", {
   transform: transform
+});
+
+sensorServerSchema.pre('remove', function(next) {
+  var server = this;
+
+  Event.removeSensorServerFromEvents(server, next);
 });
 
 // Creates the Model for the sensorServer Schema
