@@ -124,10 +124,10 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
           
           //if the sensor is archived then we also need to ensure all time ranges are valid
           if($scope.sensors[i].userEndTimeObj.getTime() < $scope.sensors[i].startTimeObj.getTime() 
-            || $scope.sensors[i].userEndTimeObj.getTime() > $scope.sensors[i].endTimeObj.getTime() 
+            || ($scope.sensors[i].endTimeObj && $scope.sensors[i].userEndTimeObj.getTime() > $scope.sensors[i].endTimeObj.getTime())
             || $scope.sensors[i].userEndTimeObj.getTime() < $scope.sensors[i].userStartTimeObj.getTime() 
             || $scope.sensors[i].userStartTimeObj.getTime() < $scope.sensors[i].startTimeObj.getTime() 
-            || $scope.sensors[i].userStartTimeObj.getTime() > $scope.sensors[i].endTimeObj.getTime()) {
+            || ($scope.sensors[i].endTimeObj && $scope.sensors[i].userStartTimeObj.getTime() > $scope.sensors[i].endTimeObj.getTime())) {
             invalidTimeSensors.push($scope.sensors[i].name);
             continue;
           }
@@ -431,7 +431,6 @@ function SetSensorTimeDateProperties(sensor)
       d.setUTCHours(endTimeTokens[0]);
 
       sensor.endTimeObj = d;
-
     }
   }
 }
