@@ -123,11 +123,11 @@ function AdminSensorServerEditController($scope, $http, $location, $routeParams,
           userEnd = $scope.sensors[i].userEndTime;
           
           //if the sensor is archived then we also need to ensure all time ranges are valid
-          if($scope.sensors[i].userEndTimeObj.getUTCSeconds() < $scope.sensors[i].startTimeObj.getUTCSeconds() 
-            || $scope.sensors[i].userEndTimeObj.getUTCSeconds() > $scope.sensors[i].endTimeObj.getUTCSeconds() 
-            || $scope.sensors[i].userEndTimeObj.getUTCSeconds() < $scope.sensors[i].userStartTimeObj.getUTCSeconds() 
-            || $scope.sensors[i].userStartTimeObj.getUTCSeconds() < $scope.sensors[i].startTimeObj.getUTCSeconds() 
-            || $scope.sensors[i].userStartTimeObj.getUTCSeconds() > $scope.sensors[i].endTimeObj.getUTCSeconds()) {
+          if($scope.sensors[i].userEndTimeObj.getTime() < $scope.sensors[i].startTimeObj.getTime() 
+            || $scope.sensors[i].userEndTimeObj.getTime() > $scope.sensors[i].endTimeObj.getTime() 
+            || $scope.sensors[i].userEndTimeObj.getTime() < $scope.sensors[i].userStartTimeObj.getTime() 
+            || $scope.sensors[i].userStartTimeObj.getTime() < $scope.sensors[i].startTimeObj.getTime() 
+            || $scope.sensors[i].userStartTimeObj.getTime() > $scope.sensors[i].endTimeObj.getTime()) {
             invalidTimeSensors.push($scope.sensors[i].name);
             continue;
           }
