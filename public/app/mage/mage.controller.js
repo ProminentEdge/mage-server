@@ -237,7 +237,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
             }
           }
         };
-
+          
         AddSensorLayer(sensorLayer, event);
       });
     });
@@ -259,10 +259,8 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
         hasRotation = true;
       
       if (observedProperty.indexOf('Video') != -1) {
-        contentHTML += '<img width = \"128\" height = \"96\" src = \"' + streamURL + '\"></img>';
-
+        contentHTML += '<img style = \"min-width:200px;margin-bottom:10px;\" width = \"100%\" height = \"auto\" src = \"' + streamURL + '\"></img>';
       } else {
-
         var contentID = 'Content_' + sensor.name + '_' + observedProperty;
         contentID = contentID.replace(/\//g, '-');
         contentID = contentID.replace(/ /g, '-');
@@ -276,8 +274,13 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
         reader.contentID = contentID;
         reader.feature = sensor.feature;
         reader.sensor = sensor;
+        reader.isReading = false;
 
+        reader.onloadstart = function() {
+          this.isReading = true;
+        };
         reader.onload = function () {
+          
           var rec = this.result;
           if (rec === "")
             return;
@@ -295,8 +298,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
             this.feature.type = 'Sensor';
             this.feature.geometry.coordinates = [lon, lat];
             MapService.updateMarker(this.feature, this.sensor.name);
-          }
-          else if (this.prop.indexOf('Quaternion') != -1) {
+          } else if (this.prop.indexOf('Quaternion') != -1) {
 
             var data = rec.trim().split(",");
             var qx = parseFloat(data[1]);
@@ -314,9 +316,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
               yaw = Math.acos(dot) * (180 / Math.PI);
             else
               yaw = -Math.acos(dot) * (180 / Math.PI);
-            //var yaw = 90 - (180/Math.PI*Math.atan2(-look.y, -look.x))+90;
-
-
+         
             var contentTag = document.getElementById(this.contentID);
             if (contentTag != null) {
               //contentTag.innerHTML = 'x: ' + look.x.toFixed(10) + '<br>y: ' + look.y.toFixed(10) + '<br>z: ' + look.z.toFixed(10);
@@ -325,22 +325,31 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
             this.feature.angle = yaw;
             MapService.updateMarker(this.feature, this.sensor.name);
 
-          }
-          else {
+          } else {
             var contentTag = document.getElementById(this.contentID);
-            if (contentTag != null)
-              contentTag.textContent = 'Data: ' + rec;
+            var data = rec.trim().split(",");
+            if (contentTag != null) {
+              contentTag.textContent = 'Data:\n' + data[0] + '\n';
+              for (var d = 1; d < data.length; d++) {
+                contentTag.textContent += data[d] + '\n';
+              }
+            }
           }
-        }
+        };
+        
+        reader.onloadend = function() {
+          this.isReading = false;
+        };
 
         var ws = new WebSocket(streamURL.replace('http://', 'ws://'));
         ws.reader = reader;
         ws.onmessage = function (event) {
-          this.reader.readAsText(event.data);
-        }
+          if(!this.reader.isReading)
+            this.reader.readAsText(event.data);
+        };
         ws.onerror = function (event) {
           this.close();
-        }
+        };
       }
     });
 
@@ -352,11 +361,6 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
         coordinates: sensor.feature.geometry.coordinates
       },
     };
-
-    /*var myIcon = L.AwesomeMarkers.newDivIcon({
-     icon: 'plus',
-     color: 'cadetblue'
-     });*/
 
     var myIcon = null;
     if(hasRotation) {
@@ -440,8 +444,10 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
               reader.contentID = contentID;
               reader.feature = featureCollection.features[0];
               reader.layer = layer;
+              reader.isReading = false;
 
               reader.onload = function () {
+                this.isReading = true;
                 var rec = this.result;
                 if(rec === "")
                   return;
@@ -483,9 +489,7 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                   else
                     yaw = -Math.acos(dot)*(180/Math.PI);
                   //var yaw = 90 - (180/Math.PI*Math.atan2(-look.y, -look.x))+90;
-
-
-
+                  
                   var contentTag = document.getElementById(this.contentID);
                   if (contentTag != null) {
                     contentTag.innerHTML = 'x: ' + look.x.toFixed(10) + '<br>y: ' + look.y.toFixed(10) + '<br>z: ' + look.z.toFixed(10);
@@ -500,12 +504,14 @@ function MageController($scope, $compile, $timeout, $http, $animate, $document, 
                    if (contentTag != null)
                     contentTag.textContent = 'Data: ' + rec;
                 }
+                this.isReading = false;
               }
 
               var ws = new WebSocket("ws://" + streamURL);
               ws.reader = reader;
               ws.onmessage = function (event) {
-                this.reader.readAsText(event.data);
+                if(!this.reader.isReading)
+                 this.reader.readAsText(event.data);
               }
               ws.onerror = function (event) {
                 this.close();

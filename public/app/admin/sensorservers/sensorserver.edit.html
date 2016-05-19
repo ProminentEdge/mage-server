@@ -43,7 +43,7 @@
             </div>
             <div class="form-group" >
               <span >
-                <a class="btn btn-default" ng-class="{'disabled': saving}" ng-click="getSensorProperties()">View Sensors</a>
+                <a class="btn btn-default" ng-class="{'disabled': saving}" ng-click="getSensorProperties()">Get Sensors</a>
               </span>
             </div>
             <div></div>
@@ -59,11 +59,89 @@
                       {{ x.name }} <span class="pull-right"><b ng-show = "x.isNew">NEW!</b></span>
                     </h4>
                   </div>
+
                   <table width = "100%">
                   <tr><td style = "width:25%;"><b>Description:</b></td> <td>{{ x.description }}</td> </tr>
 
-                  <tr><td style = "width:25%;"><b>Time period: </b></td> <td> {{x.startTime + '  :  ' + x.endTime}}</td></tr>
-                  <tr ng-show = "x.enabled && x.properties.length > 0"><td style = "width:25%;"><b>User Time period: </b></td><td><input type = "text" ng-model = "x.userStartTime"/><input type = "text" ng-model = "x.userEndTime"/></td></tr>
+                  <tr>
+                    <td valign = "top" style = "width:25%;"><b>Time Range: </b></td>
+                    <td>
+                      <table>
+                        <tr>
+                          <td>
+                            {{!x.startTimeObj ? 'now' : (x.startTimeObj.getMonth()+1)+'/'+x.startTimeObj.getDate()+'/'+x.startTimeObj.getFullYear() + '  ' + x.startTimeObj.toTimeString()}}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            {{!x.endTimeObj ? 'now' : (x.endTimeObj.getMonth()+1)+'/'+x.endTimeObj.getDate()+'/'+x.endTimeObj.getFullYear() + '  ' + x.endTimeObj.toTimeString()}}
+                          </td>
+                        </tr>
+
+                      </table>
+                    </td>
+                  </tr>
+                  <tr ng-show = "x.enabled">
+                    <td style ="padding-top:15px">
+                      <b>Data Stream: </b>
+                    </td>
+                    <td style ="padding-top:15px">
+                      <table>
+                        <tr>
+                          <td ng-if="x.startTime === 'now' || x.endTime === 'now'">
+                            <input type="radio" name="{{x.name+ '-stream-type'}}" ng-value="true" ng-model="x.liveStream" ng-change="onLiveStreamChanged(x)" style="margin-right:5px;">Live
+                          </td>
+                        </tr>
+                        <tr>
+                          <td ng-if="x.startTime !== 'now'">
+                           <input type="radio" name="{{x.name+ '-stream-type'}}" ng-value="false" ng-model="x.liveStream" ng-change="onLiveStreamChanged(x)" style="margin-right:5px;">Archived
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr ng-show = "x.enabled && x.properties.length > 0 && !x.liveStream">
+                    <td style = "width:25%; color:red;" ng-show ="(x.userStartTimeObj.getTime() > x.userEndTimeObj.getTime()) || (x.userStartTimeObj.getTime() > x.endTimeObj.getTime()) || (x.userStartTimeObj.getTime() < x.startTimeObj.getTime())"><b>!Start Time: </b></td>
+                    <td style = "width:25%;" ng-hide ="(x.userStartTimeObj.getTime() > x.userEndTimeObj.getTime()) || (x.userStartTimeObj.getTime() > x.endTimeObj.getTime()) || (x.userStartTimeObj.getTime() < x.startTimeObj.getTime())"><b>Start Time: </b></td>
+                    <td>
+                      <table>
+                        <tr>
+                          <td>
+                            <p class = "input-group" style ="padding-top:8px">
+                              <input type="text" class="form-control" style = "max-width:60%; display:inline" uib-datepicker-popup="MM/dd/yyyy" ng-model="x.userStartTimeObj" is-open="x.startDateOpen" close-text="Close" />
+                              <button type="button" class="btn btn-default" style = "float:left;" ng-click="openStartDate(x, $event)"><i class="fa fa-calendar"></i></button>
+                            </p>
+                          </td>
+                          <td>
+                            <uib-timepicker ng-model="x.userStartTimeObj" hour-step="1" minute-step="1" show-seconds="true" show-meridian="false"></uib-timepicker>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr ng-show = "x.enabled && x.properties.length > 0 && !x.liveStream">
+                    <td style = "width:25%; color:red;" ng-show="(x.userEndTimeObj.getTime() < x.userStartTimeObj.getTime()) || (x.userEndTimeObj.getTime() > x.endTimeObj.getTime()) || (x.userEndTimeObj.getTime() < x.startTimeObj.getTime())"><b>!End Time: </b></td>
+                    <td style = "width:25%;" ng-hide="(x.userEndTimeObj.getTime() < x.userStartTimeObj.getTime()) || (x.userEndTimeObj.getTime() > x.endTimeObj.getTime()) || (x.userEndTimeObj.getTime() < x.startTimeObj.getTime())"><b>End Time: </b></td>
+                    <td>
+                      <table>
+                        <tr>
+                          <td>
+                            <p class = "input-group" style ="padding-top:8px">
+                              <input type="text" class="form-control" style = "max-width:60%; display:inline" uib-datepicker-popup="MM/dd/yyyy" ng-model="x.userEndTimeObj" is-open="x.endDateOpen" close-text="Close" />
+                              <button type="button" class="btn btn-default" style = "float:left;" ng-click="openEndDate(x,$event)"><i class="fa fa-calendar"></i></button>
+                            </p>
+                          </td>
+                          <td>
+                            <uib-timepicker ng-model="x.userEndTimeObj"  hour-step="1" minute-step="1" second-step="1" show-seconds="true" show-meridian="false"></uib-timepicker>
+                          </td>
+                        </tr>
+                      </table>
+                      <!--<input type = "text" ng-model = "x.userStartTime"/>-->
+                    </td>
+                    <!--<td>
+                      <input type = "checkbox" ng-true-value = "true" ng-false-value = "false">live</input>
+                    </td>-->
+                  </tr>
                   </table>
                   <div ng-show = "x.enabled && x.properties.length > 0"><b>Properties: </b></div>
                   <div ng-show = "x.enabled" ng-repeat="prop in x.properties">
